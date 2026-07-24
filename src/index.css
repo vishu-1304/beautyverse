@@ -1,2 +1,135 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap');
+
 @import "tailwindcss";
 
+@theme {
+  /* Fonts - Luxury Editorial Serif and Sleek Modern Sans-Serif */
+  --font-serif: "Cormorant Garamond", "Didot", "Bodoni MT", "Georgia", serif;
+  --font-sans: "Plus Jakarta Sans", "SF Pro Display", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", sans-serif;
+
+  /* Brand Colors - Dior/Rare Beauty Tones */
+  --color-brand-gold-50: #FAF7F2;
+  --color-brand-gold-100: #F4ECDC;
+  --color-brand-gold-200: #E6D2B3;
+  --color-brand-gold-300: #D3B381;
+  --color-brand-gold-400: #C29555;
+  --color-brand-gold-500: #B3803E; /* Rich gold metallic accent */
+  --color-brand-gold-600: #93652E;
+  --color-brand-gold-700: #734D23;
+  --color-brand-gold-800: #543719;
+  --color-brand-gold-900: #3D2712;
+
+  --color-brand-blush-50: #FDF9F9;
+  --color-brand-blush-100: #FAF0F0;
+  --color-brand-blush-200: #F2DCDD;
+  --color-brand-blush-300: #E5BFC2;
+  --color-brand-blush-400: #D4A3A7; /* Dusty rose */
+  --color-brand-blush-500: #C2878C;
+  --color-brand-blush-600: #A86A70;
+  --color-brand-blush-700: #8C5156;
+  --color-brand-blush-800: #6F3C40; /* Rich rosewood */
+  --color-brand-blush-900: #542B2F;
+
+  /* Neutral tones - warm cream, alabaster, elegant obsidian */
+  --color-neutral-cream-50: #FDFDFD;
+  --color-neutral-cream-100: #FAF8F5; /* Alabaster / Satin */
+  --color-neutral-cream-200: #F4EFEB;
+  --color-neutral-cream-300: #EBE2DC;
+  --color-neutral-cream-400: #DACDC3;
+  --color-neutral-cream-500: #C7B4A8;
+  --color-neutral-cream-600: #9A887C;
+  --color-neutral-cream-700: #736257;
+  --color-neutral-cream-800: #4D3F37;
+  --color-neutral-cream-900: #29211D;
+
+  --color-neutral-obsidian-50: #F5F5F5;
+  --color-neutral-obsidian-100: #E5E5E5;
+  --color-neutral-obsidian-200: #CCCCCC;
+  --color-neutral-obsidian-300: #B3B3B3;
+  --color-neutral-obsidian-400: #808080;
+  --color-neutral-obsidian-500: #666666;
+  --color-neutral-obsidian-600: #4D4D4D;
+  --color-neutral-obsidian-700: #333333;
+  --color-neutral-obsidian-800: #1F1F1F;
+  --color-neutral-obsidian-900: #121212; /* Rich charcoal */
+  --color-neutral-obsidian-950: #0A0A0A; /* Premium luxury dark */
+
+  /* Extra details: custom luxury transitions & shadows */
+  --shadow-luxury-sm: 0 2px 8px -2px rgba(18, 18, 18, 0.04), 0 1px 4px -1px rgba(18, 18, 18, 0.02);
+  --shadow-luxury-md: 0 12px 24px -10px rgba(111, 60, 64, 0.06), 0 4px 12px -4px rgba(18, 18, 18, 0.03);
+  --shadow-luxury-lg: 0 24px 48px -18px rgba(18, 18, 18, 0.08), 0 8px 24px -8px rgba(18, 18, 18, 0.04);
+  --shadow-luxury-glow: 0 0 20px 2px rgba(212, 175, 55, 0.15), 0 4px 12px -2px rgba(111, 60, 64, 0.05);
+
+  --animate-shimmer: shimmer 2.5s infinite linear;
+  --animate-float: float 6s ease-in-out infinite;
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+}
+
+/* Shimmer gradient utilities */
+.bg-shimmer-gold {
+  background: linear-gradient(
+    90deg,
+    var(--color-brand-gold-400) 0%,
+    var(--color-brand-gold-300) 25%,
+    var(--color-brand-gold-400) 50%,
+    var(--color-brand-gold-300) 75%,
+    var(--color-brand-gold-400) 100%
+  );
+  background-size: 200% 100%;
+}
+
+.bg-shimmer-blush {
+  background: linear-gradient(
+    90deg,
+    var(--color-brand-blush-400) 0%,
+    var(--color-brand-blush-300) 25%,
+    var(--color-brand-blush-400) 50%,
+    var(--color-brand-blush-300) 75%,
+    var(--color-brand-blush-400) 100%
+  );
+  background-size: 200% 100%;
+}
+
+/* Global scrollbar adjustments for premium feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-neutral-cream-300);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-neutral-cream-400);
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-neutral-cream-100);
+  color: var(--color-neutral-obsidian-950);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
