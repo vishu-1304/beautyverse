@@ -1,6 +1,7 @@
 import React from 'react';
 import Hero from '../sections/Hero';
 import BeautyQuizSection from '../sections/BeautyQuizSection';
+import FaceUploadSection from '../sections/FaceUploadSection';
 import BeautyJourney from '../sections/BeautyJourney';
 import AIFeatures from '../sections/AIFeatures';
 import FaceCanvasPreview from '../sections/FaceCanvasPreview';
@@ -12,6 +13,7 @@ const Home: React.FC = () => {
     <div className="flex flex-col w-full">
       <Hero />
       <BeautyQuizSection />
+      <FaceUploadSection />
       <BeautyJourney />
       <AIFeatures />
       <FaceCanvasPreview />
