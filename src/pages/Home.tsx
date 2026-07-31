@@ -3,6 +3,7 @@ import Hero from '../sections/Hero';
 import BeautyQuizSection from '../sections/BeautyQuizSection';
 import FaceUploadSection from '../sections/FaceUploadSection';
 import RecommendationSection from '../sections/RecommendationSection';
+import BeautyPassportSection from '../sections/BeautyPassportSection';
 import BeautyJourney from '../sections/BeautyJourney';
 import AIFeatures from '../sections/AIFeatures';
 import FaceCanvasPreview from '../sections/FaceCanvasPreview';
@@ -16,6 +17,7 @@ const Home: React.FC = () => {
       <BeautyQuizSection />
       <FaceUploadSection />
       <RecommendationSection />
+      <BeautyPassportSection />
       <BeautyJourney />
       <AIFeatures />
       <FaceCanvasPreview />
