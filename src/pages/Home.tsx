@@ -4,6 +4,8 @@ import BeautyQuizSection from '../sections/BeautyQuizSection';
 import FaceUploadSection from '../sections/FaceUploadSection';
 import RecommendationSection from '../sections/RecommendationSection';
 import BeautyPassportSection from '../sections/BeautyPassportSection';
+import VirtualMakeupStudio from '../sections/VirtualMakeupStudio';
+import CommunityGallerySection from '../sections/CommunityGallerySection';
 import BeautyJourney from '../sections/BeautyJourney';
 import AIFeatures from '../sections/AIFeatures';
 import FaceCanvasPreview from '../sections/FaceCanvasPreview';
@@ -18,6 +20,8 @@ const Home: React.FC = () => {
       <FaceUploadSection />
       <RecommendationSection />
       <BeautyPassportSection />
+      <VirtualMakeupStudio />
+      <CommunityGallerySection />
       <BeautyJourney />
       <AIFeatures />
       <FaceCanvasPreview />
