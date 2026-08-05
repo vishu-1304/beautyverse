@@ -88,7 +88,7 @@ export const FaceUploadSection: React.FC = () => {
   };
 
   return (
-    <section className="relative w-full overflow-hidden bg-neutral-obsidian-950 text-white py-24 md:py-32 border-b border-white/5">
+    <section id="face-upload-section" className="relative w-full overflow-hidden bg-neutral-obsidian-950 text-white py-24 md:py-32 border-b border-white/5">
       {/* Glow animations inside scanning overlay */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes scan-horizontal {
