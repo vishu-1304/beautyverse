@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import Container from '../components/ui/Container';
-import { analyzeBeautyProfile } from '../services/analysisService';
+import { analyzeFace } from '../services/analysisService';
 import LoadingOverlay from '../components/ui/LoadingOverlay';
 
 export const FaceUploadSection: React.FC = () => {
@@ -17,11 +17,13 @@ export const FaceUploadSection: React.FC = () => {
   const [hydration, setHydration] = useState<number | null>(null);
   const [symmetry, setSymmetry] = useState<number | null>(null);
   const [recommendation, setRecommendation] = useState<string | null>(null);
+  const [errorText, setErrorText] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+    if (isAnalyzing) return;
     setIsDragging(true);
   };
 
@@ -29,76 +31,47 @@ export const FaceUploadSection: React.FC = () => {
     setIsDragging(false);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      if (file.type.startsWith('image/')) {
-        setSelectedFile(file);
-        setPreviewUrl(URL.createObjectURL(file));
-        // Reset state values on new upload
-        setAiStatus('Ready');
-        setConfidence('98%');
-      } else {
-        alert('Please drop an image file (PNG, JPG, or JPEG).');
-      }
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-      setAiStatus('Ready');
-      setConfidence('98%');
-    }
-  };
-
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleAnalyze = () => {
-    if (!selectedFile) {
-      alert('Please choose or upload a selfie first to perform AI analysis.');
+  const performAnalysis = (file: File) => {
+    // Validate image file type
+    if (!file.type.startsWith('image/')) {
+      setErrorText('Invalid file format. Please upload an image file (PNG, JPG, or JPEG).');
+      setIsAnalyzing(true); // Show overlay in error state
       return;
     }
 
     setIsAnalyzing(true);
+    setErrorText(null);
     setAnalysisProgress(0);
-    setAiStatus('Calibrating HD dermal scanning sensors...');
-
-    // Fetch quiz answers from localStorage (if completed), or supply fallback
-    const savedAnswers = localStorage.getItem('beautyverse_quiz_answers');
-    const answers = savedAnswers ? JSON.parse(savedAnswers) : {};
+    setAiStatus('Scanning Face...');
 
     const startTime = Date.now();
-    const duration = 2000; // 2 seconds to match simulated API request
+    const duration = 5000; // Reach 95% in 5 seconds dynamically
 
     const progressInterval = setInterval(() => {
       const elapsed = Date.now() - startTime;
-      const progress = Math.min((elapsed / duration) * 99, 99); // Cap at 99% until promise resolves
+      const progress = Math.min((elapsed / duration) * 95, 95);
       setAnalysisProgress(progress);
 
-      if (progress < 25) {
-        setAiStatus('Calibrating HD dermal scanning sensors...');
+      if (progress < 15) {
+        setAiStatus('Scanning Face...');
+      } else if (progress < 30) {
+        setAiStatus('Analyzing Skin...');
       } else if (progress < 50) {
-        setAiStatus('Analyzing 120+ facial contour markers...');
-      } else if (progress < 75) {
-        setAiStatus('Synthesizing facial symmetry & skin tone...');
+        setAiStatus('Detecting Face Shape...');
+      } else if (progress < 70) {
+        setAiStatus('Detecting Skin Tone...');
+      } else if (progress < 85) {
+        setAiStatus('Preparing Beauty Passport...');
       } else {
-        setAiStatus('Generating personalized beauty recommendation...');
+        setAiStatus('Generating Recommendations...');
       }
-    }, 80);
+    }, 100);
 
-    analyzeBeautyProfile(selectedFile, answers)
+    analyzeFace(file)
       .then((result) => {
         clearInterval(progressInterval);
         setAnalysisProgress(100);
-        setAiStatus('Bespoke report generated successfully!');
+        setAiStatus('Complete');
 
         // Pause briefly in success state for visual luxury reward, then render data
         setTimeout(() => {
@@ -111,15 +84,50 @@ export const FaceUploadSection: React.FC = () => {
           setRecommendation(result.recommendation);
           
           setIsAnalyzing(false);
-          setAiStatus('Complete');
+          setErrorText(null);
         }, 1200);
       })
-      .catch((error) => {
+      .catch((err: any) => {
         clearInterval(progressInterval);
-        setIsAnalyzing(false);
+        setErrorText(err.message || 'Dermal analysis failed. Please try again.');
         setAiStatus('Error');
-        console.error('AI Analysis failed:', error);
       });
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (isAnalyzing) return;
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+      performAnalysis(file);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isAnalyzing) return;
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+      performAnalysis(file);
+    }
+  };
+
+  const triggerFileInput = () => {
+    if (isAnalyzing) return;
+    fileInputRef.current?.click();
+  };
+
+  const handleAnalyze = () => {
+    if (!selectedFile) {
+      triggerFileInput();
+      return;
+    }
+    performAnalysis(selectedFile);
   };
 
   return (
@@ -169,7 +177,7 @@ export const FaceUploadSection: React.FC = () => {
                   : previewUrl 
                     ? 'border-white/20 bg-neutral-obsidian-900/40 hover:border-brand-gold-400/50' 
                     : 'border-white/10 bg-white/5 hover:border-white/25 hover:bg-white/10'
-              }`}
+              } ${isAnalyzing ? 'pointer-events-none opacity-50' : ''}`}
             >
               <input
                 ref={fileInputRef}
@@ -178,6 +186,7 @@ export const FaceUploadSection: React.FC = () => {
                 accept="image/png, image/jpeg, image/jpg"
                 className="hidden"
                 onChange={handleFileChange}
+                disabled={isAnalyzing}
               />
 
               {previewUrl ? (
@@ -250,6 +259,12 @@ export const FaceUploadSection: React.FC = () => {
                 isLoading={isAnalyzing} 
                 progress={analysisProgress} 
                 statusText={aiStatus} 
+                errorText={errorText}
+                onRetry={() => selectedFile && performAnalysis(selectedFile)}
+                onCancel={() => {
+                  setIsAnalyzing(false);
+                  setErrorText(null);
+                }}
               />
 
               <div className="space-y-6">
