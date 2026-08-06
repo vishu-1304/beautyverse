@@ -3,7 +3,12 @@ import Container from '../components/ui/Container';
 import { analyzeFace } from '../services/analysisService';
 import LoadingOverlay from '../components/ui/LoadingOverlay';
 
-export const FaceUploadSection: React.FC = () => {
+interface FaceUploadSectionProps {
+  onAnalysisComplete?: () => void;
+}
+
+export const FaceUploadSection: React.FC<FaceUploadSectionProps> = ({ onAnalysisComplete }) => {
+
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -85,7 +90,12 @@ export const FaceUploadSection: React.FC = () => {
           
           setIsAnalyzing(false);
           setErrorText(null);
+
+          if (onAnalysisComplete) {
+            onAnalysisComplete();
+          }
         }, 1200);
+
       })
       .catch((err: any) => {
         clearInterval(progressInterval);

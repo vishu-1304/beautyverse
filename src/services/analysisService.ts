@@ -17,6 +17,17 @@ export interface AnalysisResult {
   recommendation: string;
 }
 
+export interface HistoryRecord {
+  _id: string;
+  faceShape: string;
+  skinTone: string;
+  skinType: string;
+  beautyScore: number;
+  recommendation: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 /**
  * Helper to handle standard API errors, including backend offline and request timeouts.
  */
@@ -24,7 +35,6 @@ function handleApiError(error: any): never {
   if (error.name === 'AbortError') {
     throw new Error('Analysis request timed out. Please try again.');
   }
-  // "Failed to fetch" is the standard TypeError thrown when backend is offline/unreachable
   if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
     throw new Error('Dermal analysis server is unreachable. Please ensure the Express backend is running on http://localhost:5000.');
   }
@@ -92,22 +102,59 @@ export async function analyzeFace(file: File): Promise<AnalysisResult> {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Analysis failed with status ${response.status}`);
+      throw new Error(errorData.message || `Analysis failed: ${errorData.message || response.statusText}`);
     }
 
     const data = await response.json();
+    
+    // Support either Day 13 flat fields or Day 14 nested analysis fields
+    const result = data.analysis || data;
+    
     return {
-      faceShape: data.faceShape || 'Oval',
-      skinTone: data.skinTone || 'Warm Golden',
-      skinType: data.skinType || 'Combination',
-      confidence: data.confidence || data.beautyScore || 95,
+      faceShape: result.faceShape || 'Oval',
+      skinTone: result.skinTone || 'Warm Golden',
+      skinType: result.skinType || 'Combination',
+      confidence: result.confidence || result.beautyScore || 95,
       hydration: data.hydration || 88,
       symmetry: data.symmetry || 92,
-      recommendation: data.recommendation || 'Golden Hour Glam'
+      recommendation: result.recommendation || 'Golden Hour Glam'
     };
   } catch (error: any) {
     clearTimeout(timeoutId);
     handleApiError(error);
+  }
+}
+
+/**
+ * Fetches the latest 10 analyses from the backend database history.
+ * 
+ * @returns List of history record objects
+ */
+export async function fetchAnalysisHistory(): Promise<HistoryRecord[]> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout
+
+  try {
+    const response = await fetch('http://localhost:5000/api/history', {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Failed to fetch history');
+    }
+
+    return data.history || [];
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error('History request timed out.');
+    }
+    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+      throw new Error('Database server is offline or unreachable.');
+    }
+    throw error;
   }
 }
 

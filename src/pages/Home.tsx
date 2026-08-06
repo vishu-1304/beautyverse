@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Hero from '../sections/Hero';
 import BeautyQuizSection from '../sections/BeautyQuizSection';
 import FaceUploadSection from '../sections/FaceUploadSection';
+import AnalysisHistorySection from '../sections/AnalysisHistorySection';
 import RecommendationSection from '../sections/RecommendationSection';
 import BeautyPassportSection from '../sections/BeautyPassportSection';
 import VirtualMakeupStudio from '../sections/VirtualMakeupStudio';
@@ -14,11 +15,14 @@ import PassportPreview from '../sections/PassportPreview';
 import GalleryPreview from '../sections/GalleryPreview';
 
 const Home: React.FC = () => {
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
   return (
     <div className="flex flex-col w-full">
       <Hero />
       <BeautyQuizSection />
-      <FaceUploadSection />
+      <FaceUploadSection onAnalysisComplete={() => setRefreshTrigger(prev => prev + 1)} />
+      <AnalysisHistorySection refreshTrigger={refreshTrigger} />
       <RecommendationSection />
       <BeautyPassportSection />
       <VirtualMakeupStudio />
@@ -34,4 +38,5 @@ const Home: React.FC = () => {
 };
 
 export default Home;
+
 

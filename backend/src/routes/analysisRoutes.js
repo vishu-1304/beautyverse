@@ -7,6 +7,8 @@ const router = Router();
 // Route mappings
 router.get('/health', analysisController.checkHealth);
 router.post('/analyze', upload.single('image'), analysisController.analyze);
+router.get('/history', analysisController.getHistory);
+
 
 export default router;
 
