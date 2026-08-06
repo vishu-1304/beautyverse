@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
 import Container from '../components/ui/Container';
+import { analyzeBeautyProfile } from '../services/analysisService';
+import LoadingOverlay from '../components/ui/LoadingOverlay';
 
 export const FaceUploadSection: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
@@ -12,6 +14,9 @@ export const FaceUploadSection: React.FC = () => {
   const [skinType, setSkinType] = useState('Combination');
   const [confidence, setConfidence] = useState('98%');
   const [aiStatus, setAiStatus] = useState('Ready');
+  const [hydration, setHydration] = useState<number | null>(null);
+  const [symmetry, setSymmetry] = useState<number | null>(null);
+  const [recommendation, setRecommendation] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -63,28 +68,58 @@ export const FaceUploadSection: React.FC = () => {
     }
 
     setIsAnalyzing(true);
-    setAiStatus('Analyzing...');
     setAnalysisProgress(0);
+    setAiStatus('Calibrating HD dermal scanning sensors...');
 
-    // Simulate luxury AI face scan metric computations
-    const interval = setInterval(() => {
-      setAnalysisProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            setIsAnalyzing(false);
-            setAiStatus('Complete');
-            setConfidence('99.4%');
-            // Mock a subtle update in shape/type to show dynamic calculation
-            setFaceShape('Oval (Symmetrical)');
-            setSkinTone('Warm Golden');
-            setSkinType('Combination (Slightly Oily T-Zone)');
-          }, 800);
-          return 100;
-        }
-        return prev + 10;
+    // Fetch quiz answers from localStorage (if completed), or supply fallback
+    const savedAnswers = localStorage.getItem('beautyverse_quiz_answers');
+    const answers = savedAnswers ? JSON.parse(savedAnswers) : {};
+
+    const startTime = Date.now();
+    const duration = 2000; // 2 seconds to match simulated API request
+
+    const progressInterval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min((elapsed / duration) * 99, 99); // Cap at 99% until promise resolves
+      setAnalysisProgress(progress);
+
+      if (progress < 25) {
+        setAiStatus('Calibrating HD dermal scanning sensors...');
+      } else if (progress < 50) {
+        setAiStatus('Analyzing 120+ facial contour markers...');
+      } else if (progress < 75) {
+        setAiStatus('Synthesizing facial symmetry & skin tone...');
+      } else {
+        setAiStatus('Generating personalized beauty recommendation...');
+      }
+    }, 80);
+
+    analyzeBeautyProfile(selectedFile, answers)
+      .then((result) => {
+        clearInterval(progressInterval);
+        setAnalysisProgress(100);
+        setAiStatus('Bespoke report generated successfully!');
+
+        // Pause briefly in success state for visual luxury reward, then render data
+        setTimeout(() => {
+          setFaceShape(result.faceShape);
+          setSkinTone(result.skinTone);
+          setSkinType(result.skinType);
+          setConfidence(`${result.confidence}%`);
+          setHydration(result.hydration);
+          setSymmetry(result.symmetry);
+          setRecommendation(result.recommendation);
+          
+          setIsAnalyzing(false);
+          setAiStatus('Complete');
+        }, 1200);
+      })
+      .catch((error) => {
+        clearInterval(progressInterval);
+        setIsAnalyzing(false);
+        setAiStatus('Error');
+        console.error('AI Analysis failed:', error);
       });
-    }, 150);
   };
 
   return (
@@ -210,6 +245,13 @@ export const FaceUploadSection: React.FC = () => {
               {/* Gold light shine at corner */}
               <div className="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-brand-gold-400/10 blur-xl pointer-events-none" />
 
+              {/* Reusable Loading Overlay component with luxury animations */}
+              <LoadingOverlay 
+                isLoading={isAnalyzing} 
+                progress={analysisProgress} 
+                statusText={aiStatus} 
+              />
+
               <div className="space-y-6">
                 {/* Card Title Header */}
                 <div className="border-b border-white/10 pb-4 flex items-center justify-between">
@@ -219,23 +261,25 @@ export const FaceUploadSection: React.FC = () => {
                   <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-medium border ${
                     aiStatus === 'Ready' 
                       ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                      : aiStatus === 'Analyzing...' 
-                        ? 'bg-brand-gold-500/10 text-brand-gold-400 border-brand-gold-500/20 animate-pulse'
-                        : 'bg-brand-blush-500/10 text-brand-blush-400 border-brand-blush-500/20'
+                      : aiStatus === 'Complete' 
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                        : aiStatus === 'Error'
+                          ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                          : 'bg-brand-gold-500/10 text-brand-gold-400 border-brand-gold-500/20 animate-pulse'
                   }`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${
-                      aiStatus === 'Ready' 
+                      aiStatus === 'Ready' || aiStatus === 'Complete'
                         ? 'bg-emerald-400' 
-                        : aiStatus === 'Analyzing...' 
-                          ? 'bg-brand-gold-400' 
-                          : 'bg-brand-blush-400'
+                        : aiStatus === 'Error'
+                          ? 'bg-red-400'
+                          : 'bg-brand-gold-400'
                     }`} />
                     {aiStatus}
                   </span>
                 </div>
 
                 {/* Analysis Parameters Grid */}
-                <div className="space-y-4 font-sans text-xs">
+                <div className="space-y-3.5 font-sans text-xs">
                   {/* Parameter: Face Shape */}
                   <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 transition duration-300">
                     <span className="text-neutral-cream-400 uppercase tracking-widest text-[10px]">Face Shape</span>
@@ -254,35 +298,37 @@ export const FaceUploadSection: React.FC = () => {
                     <span className="text-white font-medium">{skinType}</span>
                   </div>
 
-                  {/* Parameter: Confidence */}
+                  {/* Parameter: Hydration Level */}
                   <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 transition duration-300">
-                    <span className="text-neutral-cream-400 uppercase tracking-widest text-[10px]">Confidence</span>
-                    <span className="text-brand-gold-300 font-semibold">{confidence}</span>
+                    <span className="text-neutral-cream-400 uppercase tracking-widest text-[10px]">Hydration Level</span>
+                    <span className="text-brand-gold-300 font-medium">
+                      {hydration !== null ? `${hydration}%` : 'Pending'}
+                    </span>
                   </div>
 
-                  {/* Parameter: AI Status */}
+                  {/* Parameter: Facial Symmetry */}
                   <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 transition duration-300">
-                    <span className="text-neutral-cream-400 uppercase tracking-widest text-[10px]">AI Status</span>
-                    <span className="text-white font-semibold font-serif italic text-sm">{aiStatus}</span>
+                    <span className="text-neutral-cream-400 uppercase tracking-widest text-[10px]">Facial Symmetry</span>
+                    <span className="text-brand-gold-300 font-medium">
+                      {symmetry !== null ? `${symmetry}%` : 'Pending'}
+                    </span>
+                  </div>
+
+                  {/* Parameter: Confidence */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5 hover:border-white/10 transition duration-300">
+                    <span className="text-neutral-cream-400 uppercase tracking-widest text-[10px]">Confidence Score</span>
+                    <span className="text-emerald-400 font-semibold">{confidence}</span>
+                  </div>
+
+                  {/* Parameter: Recommendation */}
+                  <div className="flex flex-col gap-1.5 p-3.5 rounded-lg bg-brand-gold-950/20 border border-brand-gold-400/20 hover:border-brand-gold-400/40 transition duration-300">
+                    <span className="text-brand-gold-400 uppercase tracking-widest text-[9px] font-bold">AI Bespoke Recommendation</span>
+                    <span className="text-white font-serif italic text-base font-medium">
+                      {recommendation || 'Run scan to calculate'}
+                    </span>
                   </div>
                 </div>
               </div>
-
-              {/* Loader indicator when analyzing */}
-              {isAnalyzing && (
-                <div className="mt-6 space-y-2">
-                  <div className="flex justify-between text-[10px] text-brand-gold-400 font-mono">
-                    <span>COMPUTING LANDMARKS...</span>
-                    <span>{analysisProgress}%</span>
-                  </div>
-                  <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-brand-gold-400 transition-all duration-150" 
-                      style={{ width: `${analysisProgress}%` }}
-                    />
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>

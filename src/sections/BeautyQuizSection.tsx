@@ -51,6 +51,17 @@ export const BeautyQuizSection: React.FC = () => {
       return;
     }
     
+    // Store quiz answers in localStorage for clean cross-component AI workflows
+    const answers = {
+      fullName,
+      age,
+      gender,
+      skinType: selectedSkinType,
+      concerns: selectedConcerns,
+      preference: selectedPreference
+    };
+    localStorage.setItem('beautyverse_quiz_answers', JSON.stringify(answers));
+    
     setIsAnalyzing(true);
     setAnalysisProgress(0);
     setAnalysisStep('Calibrating dermal mapping sensors...');
